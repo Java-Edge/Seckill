@@ -1,16 +1,24 @@
 package com.sss.controller;
 
 import com.sss.domain.User;
+import com.sss.redis.GoodsKey;
 import com.sss.redis.RedisService;
 import com.sss.service.GoodsService;
 import com.sss.service.UserService;
 import com.sss.vo.GoodsVo;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.thymeleaf.spring4.context.SpringWebContext;
+import org.thymeleaf.spring4.view.ThymeleafViewResolver;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 /**
@@ -30,24 +38,50 @@ public class GoodsController {
     @Autowired
     GoodsService goodsService;
 
-    @RequestMapping("/to_list")
-    public String list(Model model,User user) {
+
+    @Autowired
+    ThymeleafViewResolver thymeleafViewResolver;
+
+    @Autowired
+    ApplicationContext applicationContext;
+
+    @RequestMapping(value = "/to_list",produces = "text/html")
+    @ResponseBody
+    public String list(HttpServletRequest request, HttpServletResponse response, Model model, User user) {
         model.addAttribute("user", user);
-        //查询商品列表
+        //取缓存
+        String html = redisService.get(GoodsKey.getGoodsList, "", String.class);
+        if(!StringUtils.isEmpty(html)) {
+            return html;
+        }
+        //取不到则手动渲染
         List<GoodsVo> goodsList = goodsService.listGoodsVo();
         model.addAttribute("goodsList", goodsList);
-        return "goods_list";
+        SpringWebContext ctx = new SpringWebContext(request,response,
+                request.getServletContext(),request.getLocale(), model.asMap(), applicationContext );
+        html = thymeleafViewResolver.getTemplateEngine().process("goods_list", ctx);
+        //无论任何人访问,都是同一个界面,力度最佳
+        if(!StringUtils.isEmpty(html)) {
+            redisService.set(GoodsKey.getGoodsList, "", html);
+        }
+        return html;
     }
 
     @RequestMapping("/to_detail/{goodsId}")
-    public String detail(Model model, User user, @PathVariable("goodsId") long goodsId) {
-        model.addAttribute("user", user);
+    @ResponseBody
+    public String detail2(HttpServletRequest request, HttpServletResponse response, Model model,User user,
+                          @PathVariable("goodsId")long goodsId) {
+        //取缓存
+        String html = redisService.get(GoodsKey.getGoodsDetail, ""+goodsId, String.class);
+        if(!StringUtils.isEmpty(html)) {
+            return html;
+        }
+        //手动渲染
+        GoodsVo goods = goodsService.getGoodsVoByGoodsId(goodsId);
+        model.addAttribute("goods", goods);
 
-        GoodsVo goodsVo = goodsService.getGoodsVoByGoodsId(goodsId);
-        model.addAttribute("goods", goodsVo);
-
-        long startAt = goodsVo.getStartDate().getTime();
-        long endAt = goodsVo.getEndDate().getTime();
+        long startAt = goods.getStartDate().getTime();
+        long endAt = goods.getEndDate().getTime();
         long now = System.currentTimeMillis();
 
         int secKillStatus = 0;
@@ -64,6 +98,13 @@ public class GoodsController {
         }
         model.addAttribute("secKillStatus", secKillStatus);
         model.addAttribute("remainSeconds", remainSeconds);
-        return "goods_detail";
+        SpringWebContext ctx = new SpringWebContext(request,response,
+                request.getServletContext(),request.getLocale(), model.asMap(), applicationContext );
+        html = thymeleafViewResolver.getTemplateEngine().process("goods_detail", ctx);
+        //URL的缓存
+        if(!StringUtils.isEmpty(html)) {
+            redisService.set(GoodsKey.getGoodsDetail, ""+goodsId, html);
+        }
+        return html;
     }
 }
