@@ -1,0 +1,11 @@
+CREATE TABLE user (
+  id BIGINT(20) NOT NULL,
+  nickname VARCHAR(255) NOT NULL,
+  password VARCHAR(32) DEFAULT NULL,
+  salt VARCHAR(10) DEFAULT NULL ,
+  head VARCHAR(128) DEFAULT NULL ,
+  register_date DATETIME DEFAULT NULL ,
+  last_login_date DATETIME DEFAULT NULL ,
+  login_count INT(11) DEFAULT '0',
+  PRIMARY KEY  (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
