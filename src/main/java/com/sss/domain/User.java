@@ -5,6 +5,9 @@ import lombok.Setter;
 
 import java.util.Date;
 
+/**
+ * @author v_shishusheng
+ */
 @Setter
 @Getter
 public class User {
