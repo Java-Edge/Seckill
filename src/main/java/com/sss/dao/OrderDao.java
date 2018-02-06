@@ -29,4 +29,7 @@ public interface OrderDao {
 
     @Insert("insert into seckill_order (user_id, goods_id, order_id)values(#{userId}, #{goodsId}, #{orderId})")
     int insertSecKillOrder(SecKillOrder seckillOrder);
+
+    @Select("select * from order_info where id = #{orderId}")
+    OrderInfo getOrderById(@Param("orderId")long orderId);
 }

@@ -913,6 +913,7 @@
       <Collation>utf8mb4_general_ci</Collation>
     </table>
     <table id="230" parent="5" name="seckill_order">
+      <Comment>建立唯一索引防止一个用户两次秒杀同一商品</Comment>
       <Engine>InnoDB</Engine>
       <Collation>utf8mb4_general_ci</Collation>
     </table>
@@ -1088,55 +1089,65 @@
       <DataType>bigint(20)|0</DataType>
       <ColumnKind>normal</ColumnKind>
     </column>
-    <key id="264" parent="230" name="PRIMARY">
+    <index id="264" parent="230" name="u_uid_gid">
+      <ColNames>user_id
+goods_id</ColNames>
+      <Unique>1</Unique>
+    </index>
+    <key id="265" parent="230" name="PRIMARY">
       <NameSurrogate>1</NameSurrogate>
       <ColNames>id</ColNames>
       <Primary>1</Primary>
     </key>
-    <column id="265" parent="231" name="id">
+    <key id="266" parent="230" name="u_uid_gid">
+      <ColNames>user_id
+goods_id</ColNames>
+      <UnderlyingIndexName>u_uid_gid</UnderlyingIndexName>
+    </key>
+    <column id="267" parent="231" name="id">
       <Position>1</Position>
       <DataType>bigint(20)|0</DataType>
       <NotNull>1</NotNull>
       <ColumnKind>normal</ColumnKind>
     </column>
-    <column id="266" parent="231" name="nickname">
+    <column id="268" parent="231" name="nickname">
       <Position>2</Position>
       <DataType>varchar(255)|0</DataType>
       <NotNull>1</NotNull>
       <ColumnKind>normal</ColumnKind>
     </column>
-    <column id="267" parent="231" name="password">
+    <column id="269" parent="231" name="password">
       <Position>3</Position>
       <DataType>varchar(32)|0</DataType>
       <ColumnKind>normal</ColumnKind>
     </column>
-    <column id="268" parent="231" name="salt">
+    <column id="270" parent="231" name="salt">
       <Position>4</Position>
       <DataType>varchar(10)|0</DataType>
       <ColumnKind>normal</ColumnKind>
     </column>
-    <column id="269" parent="231" name="head">
+    <column id="271" parent="231" name="head">
       <Position>5</Position>
       <DataType>varchar(128)|0</DataType>
       <ColumnKind>normal</ColumnKind>
     </column>
-    <column id="270" parent="231" name="register_date">
+    <column id="272" parent="231" name="register_date">
       <Position>6</Position>
       <DataType>datetime|0</DataType>
       <ColumnKind>normal</ColumnKind>
     </column>
-    <column id="271" parent="231" name="last_login_date">
+    <column id="273" parent="231" name="last_login_date">
       <Position>7</Position>
       <DataType>datetime|0</DataType>
       <ColumnKind>normal</ColumnKind>
     </column>
-    <column id="272" parent="231" name="login_count">
+    <column id="274" parent="231" name="login_count">
       <Position>8</Position>
       <DataType>int(11)|0</DataType>
       <DefaultExpression>&apos;0&apos;</DefaultExpression>
       <ColumnKind>normal</ColumnKind>
     </column>
-    <key id="273" parent="231" name="PRIMARY">
+    <key id="275" parent="231" name="PRIMARY">
       <NameSurrogate>1</NameSurrogate>
       <ColNames>id</ColNames>
       <Primary>1</Primary>

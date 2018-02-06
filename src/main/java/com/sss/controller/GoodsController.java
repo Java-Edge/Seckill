@@ -3,8 +3,10 @@ package com.sss.controller;
 import com.sss.domain.User;
 import com.sss.redis.GoodsKey;
 import com.sss.redis.RedisService;
+import com.sss.result.Result;
 import com.sss.service.GoodsService;
 import com.sss.service.UserService;
+import com.sss.vo.GoodsDetailVo;
 import com.sss.vo.GoodsVo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -106,5 +108,33 @@ public class GoodsController {
             redisService.set(GoodsKey.getGoodsDetail, ""+goodsId, html);
         }
         return html;
+    }
+
+    @RequestMapping(value="/detail/{goodsId}")
+    @ResponseBody
+    public Result<GoodsDetailVo> detail(HttpServletRequest request, HttpServletResponse response, Model model, User user,
+                                        @PathVariable("goodsId")long goodsId) {
+        GoodsVo goods = goodsService.getGoodsVoByGoodsId(goodsId);
+        long startAt = goods.getStartDate().getTime();
+        long endAt = goods.getEndDate().getTime();
+        long now = System.currentTimeMillis();
+        int miaoshaStatus = 0;
+        int remainSeconds = 0;
+        if(now < startAt ) {//秒杀还没开始，倒计时
+            miaoshaStatus = 0;
+            remainSeconds = (int)((startAt - now )/1000);
+        }else  if(now > endAt){//秒杀已经结束
+            miaoshaStatus = 2;
+            remainSeconds = -1;
+        }else {//秒杀进行中
+            miaoshaStatus = 1;
+            remainSeconds = 0;
+        }
+        GoodsDetailVo vo = new GoodsDetailVo();
+        vo.setGoods(goods);
+        vo.setUser(user);
+        vo.setRemainSeconds(remainSeconds);
+        vo.setSecKillStatus(miaoshaStatus);
+        return Result.success(vo);
     }
 }

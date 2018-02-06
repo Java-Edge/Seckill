@@ -2,6 +2,8 @@ package com.sss.service;
 
 import java.util.Date;
 
+import com.sss.redis.OrderKey;
+import com.sss.redis.RedisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,10 +23,16 @@ public class OrderService {
     @Autowired
     OrderDao orderDao;
 
+    @Autowired
+    RedisService redisService;
+
     public SecKillOrder getSecKillOrderByUserIdGoodsId(long userId, long goodsId) {
-        return orderDao.getSecKillOrderByUserIdGoodsId(userId, goodsId);
+        return redisService.get(OrderKey.getSecKillOrderByUidGid, ""+userId+"_"+goodsId, SecKillOrder.class);
     }
 
+    public OrderInfo getOrderById(long orderId) {
+        return orderDao.getOrderById(orderId);
+    }
     @Transactional
     public OrderInfo createOrder(User user, GoodsVo goods) {
         OrderInfo orderInfo = new OrderInfo();
@@ -43,6 +51,8 @@ public class OrderService {
         secKillOrder.setOrderId(orderId);
         secKillOrder.setUserId(user.getId());
         orderDao.insertSecKillOrder(secKillOrder);
+
+        redisService.set(OrderKey.getSecKillOrderByUidGid, ""+user.getId()+"_"+goods.getId(), secKillOrder);
         return orderInfo;
     }
 
