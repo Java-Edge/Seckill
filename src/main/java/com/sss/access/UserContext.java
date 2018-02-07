@@ -1,17 +1,19 @@
 package com.sss.access;
 
-import com.imooc.miaosha.domain.MiaoshaUser;
 import com.sss.domain.User;
 
+/**
+ * @author v_shishusheng
+ */
 public class UserContext {
 	
-	private static ThreadLocal<MiaoshaUser> userHolder = new ThreadLocal<MiaoshaUser>();
-	
+	private static ThreadLocal<User> userHolder = new ThreadLocal<>();
+
 	public static void setUser(User user) {
 		userHolder.set(user);
 	}
-	
-	public static MiaoshaUser getUser() {
+
+	public static User getUser() {
 		return userHolder.get();
 	}
 

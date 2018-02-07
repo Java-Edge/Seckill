@@ -1,12 +1,12 @@
 <!DOCTYPE HTML>
-<html >
+<html>
 <head>
     <title>商品详情</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <!-- jquery -->
     <script type="text/javascript" src="/js/jquery.min.js"></script>
     <!-- bootstrap -->
-    <link rel="stylesheet" type="text/css" href="/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="/bootstrap/css/bootstrap.min.css"/>
     <script type="text/javascript" src="/bootstrap/js/bootstrap.min.js"></script>
     <!-- jquery-validator -->
     <script type="text/javascript" src="/jquery-validation/jquery.validate.min.js"></script>
@@ -20,7 +20,7 @@
 </head>
 <body>
 
-<div class="panel panel-default" >
+<div class="panel panel-default">
     <div class="panel-heading">秒杀商品详情</div>
     <div class="panel-body">
         <span id="userTip"> 您还没有登录，请登陆后再操作<br/></span>
@@ -33,24 +33,26 @@
         </tr>
         <tr>
             <td>商品图片</td>
-            <td colspan="3"><img  id="goodsImg" width="200" height="200" /></td>
+            <td colspan="3"><img id="goodsImg" width="200" height="200"/></td>
         </tr>
         <tr>
             <td>秒杀开始时间</td>
             <td id="startTime"></td>
-            <td >
-                <input type="hidden" id="remainSeconds" />
+            <td>
+                <input type="hidden" id="remainSeconds"/>
                 <span id="SecKillTip"></span>
             </td>
             <td>
                 <div class="row">
                     <div class="form-inline">
-                        <img id="verifyCodeImg" width="80" height="32"  style="display:none" onclick="refreshVerifyCode()"/>
-                        <input id="verifyCode"  class="form-control" style="display:none"/>
-                        <button class="btn btn-primary" type="button" id="buyButton"onclick="getSecKillPath()">立即秒杀</button>
+                        <img id="verifyCodeImg" width="80" height="32" style="display:none"
+                             onclick="refreshVerifyCode()"/>
+                        <input id="verifyCode" class="form-control" style="display:none"/>
+                        <button class="btn btn-primary" type="button" id="buyButton" onclick="getSecKillPath()">立即秒杀
+                        </button>
                     </div>
                 </div>
-                <input type="hidden" name="goodsId"  id="goodsId" />
+                <input type="hidden" name="goodsId" id="goodsId"/>
             </td>
         </tr>
         <tr>
@@ -59,103 +61,103 @@
         </tr>
         <tr>
             <td>秒杀价</td>
-            <td colspan="3"  id="SecKillPrice"></td>
+            <td colspan="3" id="SecKillPrice"></td>
         </tr>
         <tr>
             <td>库存数量</td>
-            <td colspan="3"  id="stockCount"></td>
+            <td colspan="3" id="stockCount"></td>
         </tr>
     </table>
 </div>
 </body>
 <script>
 
-    function getSecKillResult(goodsId){
+    function getSecKillResult(goodsId) {
         g_showLoading();
         $.ajax({
-            url:"/SecKill/result",
-            type:"GET",
-            data:{
-                goodsId:$("#goodsId").val(),
+            url: "/SecKill/result",
+            type: "GET",
+            data: {
+                goodsId: $("#goodsId").val(),
             },
-            success:function(data){
-                if(data.code == 0){
+            success: function (data) {
+                if (data.code == 0) {
                     var result = data.data;
-                    if(result < 0){
+                    if (result < 0) {
                         layer.msg("对不起，秒杀失败");
-                    }else if(result == 0){//轮询
-                        setTimeout(function(){
+                    } else if (result == 0) {//轮询
+                        setTimeout(function () {
                             getSecKillResult(goodsId);
                         }, 200);
-                    }else{
-                        layer.confirm("恭喜你，秒杀成功！查看订单？", {btn:["确定","取消"]},
-                            function(){
-                                window.location.href="/order_detail.htm?orderId="+result;
+                    } else {
+                        layer.confirm("恭喜你，秒杀成功！查看订单？", {btn: ["确定", "取消"]},
+                            function () {
+                                window.location.href = "/order_detail.htm?orderId=" + result;
                             },
-                            function(){
+                            function () {
                                 layer.closeAll();
                             });
                     }
-                }else{
+                } else {
                     layer.msg(data.msg);
                 }
             },
-            error:function(){
+            error: function () {
                 layer.msg("客户端请求有误");
             }
         });
     }
 
-    function getSecKillPath(){
+    function getSecKillPath() {
         var goodsId = $("#goodsId").val();
         g_showLoading();
         $.ajax({
-            url:"/seckill/path",
-            type:"GET",
-            data:{
-                goodsId:goodsId,
-                verifyCode:$("#verifyCode").val()
+            url: "/seckill/path",
+            type: "GET",
+            data: {
+                goodsId: goodsId,
+                verifyCode: $("#verifyCode").val()
             },
-            success:function(data){
-                if(data.code == 0){
+            success: function (data) {
+                if (data.code == 0) {
                     var path = data.data;
                     doSecKill(path);
-                }else{
+                } else {
                     layer.msg(data.msg);
                 }
             },
-            error:function(){
+            error: function () {
                 layer.msg("客户端请求有误");
             }
         });
     }
 
-    function doSecKill(path){
+    function doSecKill(path) {
         $.ajax({
-            url:"/seckill/"+path+"do_seckill",
-            type:"POST",
-            data:{
-                goodsId:$("#goodsId").val(),
+            url: "/seckill/" + path + "do_seckill",
+            type: "POST",
+            data: {
+                goodsId: $("#goodsId").val(),
             },
-            success:function(data){
-                if(data.code == 0){
+            success: function (data) {
+                if (data.code == 0) {
                     getSecKillResult($("#goodsId").val());
-                }else{
+                } else {
                     layer.msg(data.msg);
                 }
             },
-            error:function(){
+            error: function () {
                 layer.msg("客户端请求有误");
             }
         });
     }
 
-    function render(detail){
+    function render(detail) {
         var SecKillStatus = detail.SecKillStatus;
-        var  remainSeconds = detail.remainSeconds;
+        var remainSeconds = detail.remainSeconds;
         var goods = detail.goods;
         var user = detail.user;
-        if(user){
+        if (user) {
             $("#userTip").hide();
         }
         $("#goodsName").text(goods.goodsName);
@@ -169,50 +171,59 @@
         countDown();
     }
 
-    $(function(){
+    $(function () {
         //countDown();
         getDetail();
     });
 
-    function getDetail(){
+    function getDetail() {
         var goodsId = g_getQueryString("goodsId");
         $.ajax({
-            url:"/goods/detail/"+goodsId,
-            type:"GET",
-            success:function(data){
-                if(data.code == 0){
+            url: "/goods/detail/" + goodsId,
+            type: "GET",
+            success: function (data) {
+                if (data.code == 0) {
                     render(data.data);
-                }else{
+                } else {
                     layer.msg(data.msg);
                 }
             },
-            error:function(){
+            error: function () {
                 layer.msg("客户端请求有误");
             }
         });
     }
 
-    function countDown(){
+    function countDown() {
         var remainSeconds = $("#remainSeconds").val();
         var timeout;
-        if(remainSeconds > 0){//秒杀还没开始，倒计时
+        if (remainSeconds > 0) {//秒杀还没开始，倒计时
             $("#buyButton").attr("disabled", true);
-            $("#SecKillTip").html("秒杀倒计时："+remainSeconds+"秒");
-            timeout = setTimeout(function(){
+            $("#SecKillTip").html("秒杀倒计时：" + remainSeconds + "秒");
+            timeout = setTimeout(function () {
                 $("#countDown").text(remainSeconds - 1);
                 $("#remainSeconds").val(remainSeconds - 1);
                 countDown();
-            },1000);
-        }else if(remainSeconds == 0){//秒杀进行中
+            }, 1000);
+        } else if (remainSeconds == 0) {//秒杀进行中
             $("#buyButton").attr("disabled", false);
-            if(timeout){
+            if (timeout) {
                 clearTimeout(timeout);
             }
             $("#SecKillTip").html("秒杀进行中");
-        }else{//秒杀已经结束
+            $("#verifyCodeImg").attr("src", "/seckill/verifyCode?goodsId="+$("#goodsId").val());
+            $("#verifyCodeImg").show();
+            $("#verifyCode").show();
+        } else {//秒杀已经结束
             $("#buyButton").attr("disabled", true);
             $("#SecKillTip").html("秒杀已经结束");
+            $("#verifyCodeImg").hide();
+            $("#verifyCode").hide();
         }
+    }
+
+    function refreshVerifyCode(){
+        $("#verifyCodeImg").attr("src", "/seckill/verifyCode?goodsId="+$("#goodsId").val()+"&timestamp="+new Date().getTime());
     }
 
 </script>
