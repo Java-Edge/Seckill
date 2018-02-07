@@ -6,9 +6,10 @@ package com.sss.redis;
  */
 public class SecKillKey extends BasePrefix{
 
-    private SecKillKey(String prefix) {
-        super(prefix);
+    private SecKillKey(int expireSeconds, String prefix) {
+        super(expireSeconds, prefix);
     }
-    public static SecKillKey isGoodsOver = new SecKillKey("go");
+    public static SecKillKey isGoodsOver = new SecKillKey(0,"go");
+    public static SecKillKey getSecKillPath = new SecKillKey(60,"skp");
 
 }

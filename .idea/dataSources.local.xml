@@ -11,11 +11,5 @@
       <user-name>root</user-name>
       <introspection-schemas>*:seckill</introspection-schemas>
     </data-source>
-    <data-source name="seckill@101.132.185.223" uuid="45f7cda8-17ab-4766-8ad8-500b936f5ba5">
-      <database-info product="" version="" jdbc-version="" driver-name="" driver-version="" />
-      <secret-storage>master_key</secret-storage>
-      <first-sync>true</first-sync>
-      <user-name>root</user-name>
-    </data-source>
   </component>
 </project>

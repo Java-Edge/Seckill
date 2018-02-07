@@ -43,12 +43,13 @@
                 <span id="SecKillTip"></span>
             </td>
             <td>
-                <!--  
-                    <form id="SecKillForm" method="post" action="/SecKill/do_SecKill">
-                        <button class="btn btn-primary btn-block" type="submit" id="buyButton">立即秒杀</button>
-                        <input type="hidden" name="goodsId"  id="goodsId" />
-                    </form>-->
-                <button class="btn btn-primary btn-block" type="button" id="buyButton"onclick="doSecKill()">立即秒杀</button>
+                <div class="row">
+                    <div class="form-inline">
+                        <img id="verifyCodeImg" width="80" height="32"  style="display:none" onclick="refreshVerifyCode()"/>
+                        <input id="verifyCode"  class="form-control" style="display:none"/>
+                        <button class="btn btn-primary" type="button" id="buyButton"onclick="getSecKillPath()">立即秒杀</button>
+                    </div>
+                </div>
                 <input type="hidden" name="goodsId"  id="goodsId" />
             </td>
         </tr>
@@ -85,7 +86,7 @@
                     }else if(result == 0){//轮询
                         setTimeout(function(){
                             getSecKillResult(goodsId);
-                        }, 50);
+                        }, 200);
                     }else{
                         layer.confirm("恭喜你，秒杀成功！查看订单？", {btn:["确定","取消"]},
                             function(){
@@ -105,16 +106,39 @@
         });
     }
 
-    function doSecKill(){
+    function getSecKillPath(){
+        var goodsId = $("#goodsId").val();
+        g_showLoading();
         $.ajax({
-            url:"/SecKill/do_SecKill",
+            url:"/seckill/path",
+            type:"GET",
+            data:{
+                goodsId:goodsId,
+                verifyCode:$("#verifyCode").val()
+            },
+            success:function(data){
+                if(data.code == 0){
+                    var path = data.data;
+                    doSecKill(path);
+                }else{
+                    layer.msg(data.msg);
+                }
+            },
+            error:function(){
+                layer.msg("客户端请求有误");
+            }
+        });
+    }
+
+    function doSecKill(path){
+        $.ajax({
+            url:"/seckill/"+path+"do_seckill",
             type:"POST",
             data:{
                 goodsId:$("#goodsId").val(),
             },
             success:function(data){
                 if(data.code == 0){
-                    //window.location.href="/order_detail.htm?orderId="+data.data.id;
                     getSecKillResult($("#goodsId").val());
                 }else{
                     layer.msg(data.msg);
@@ -124,7 +148,6 @@
                 layer.msg("客户端请求有误");
             }
         });
-
     }
 
     function render(detail){
