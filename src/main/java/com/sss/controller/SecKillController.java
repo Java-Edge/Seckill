@@ -1,5 +1,6 @@
 package com.sss.controller;
 
+import com.sss.access.AccessLimit;
 import com.sss.domain.SecKillOrder;
 import com.sss.rabbitmq.MqSender;
 import com.sss.rabbitmq.SecKillMessage;
@@ -54,52 +55,53 @@ public class SecKillController implements InitializingBean {
     @Autowired
     MqSender sender;
 
-    private HashMap<Long, Boolean> localOverMap =  new HashMap<>();
+    private HashMap<Long, Boolean> localOverMap = new HashMap<>();
 
 
     /**
      * 系统启动时将商品库存加载到redis中
+     *
      * @throws Exception
      */
     @Override
     public void afterPropertiesSet() {
         List<GoodsVo> goodsList = goodsService.listGoodsVo();
-        if(goodsList == null) {
+        if (goodsList == null) {
             return;
         }
 
-        for(GoodsVo goods : goodsList) {
-            redisService.set(GoodsKey.getSecKillGoodsStock, ""+goods.getId(), goods.getStockCount());
+        for (GoodsVo goods : goodsList) {
+            redisService.set(GoodsKey.getSecKillGoodsStock, "" + goods.getId(), goods.getStockCount());
             localOverMap.put(goods.getId(), false);
         }
     }
 
     @RequestMapping(value = "/{path}/do_secKill", method = RequestMethod.POST)
     @ResponseBody
-    public Result<Integer> list(Model model, User user, @RequestParam("goodsId") long goodsId,@PathVariable("path") String path) {
+    public Result<Integer> list(Model model, User user, @RequestParam("goodsId") long goodsId, @PathVariable("path") String path) {
         model.addAttribute("user", user);
         if (user == null) {
             return Result.error(CodeMsg.SESSION_ERROR);
         }
         //验证path
         boolean check = secKillService.checkPath(user, goodsId, path);
-        if(!check){
+        if (!check) {
             return Result.error(CodeMsg.REQUEST_ILLEGAL);
         }
         //内存标记，减少redis访问
         boolean over = localOverMap.get(goodsId);
-        if(over) {
+        if (over) {
             return Result.error(CodeMsg.SECKILL_OVER);
         }
         //预减库存
-        long stock = redisService.decr(GoodsKey.getSecKillGoodsStock, ""+goodsId);
-        if(stock < 0) {
+        long stock = redisService.decr(GoodsKey.getSecKillGoodsStock, "" + goodsId);
+        if (stock < 0) {
             localOverMap.put(goodsId, true);
             return Result.error(CodeMsg.SECKILL_OVER);
         }
         //是否已秒到
         SecKillOrder order = orderService.getSecKillOrderByUserIdGoodsId(user.getId(), goodsId);
-        if(order != null) {
+        if (order != null) {
             return Result.error(CodeMsg.REPEATE_SECKILL);
         }
         //没秒到则入队
@@ -115,27 +117,56 @@ public class SecKillController implements InitializingBean {
      * orderId：成功
      * -1：秒杀失败
      * 0： 排队中
-     * */
-    @RequestMapping(value="/result", method=RequestMethod.GET)
+     */
+    @RequestMapping(value = "/result", method = RequestMethod.GET)
     @ResponseBody
-    public Result<Long> secKillResult(Model model,User user,
-                                      @RequestParam("goodsId")long goodsId) {
+    public Result<Long> secKillResult(Model model, User user,
+                                      @RequestParam("goodsId") long goodsId) {
         model.addAttribute("user", user);
-        if(user == null) {
+        if (user == null) {
             return Result.error(CodeMsg.SESSION_ERROR);
         }
-        long result  =secKillService.getSecKillResult(user.getId(), goodsId);
+        long result = secKillService.getSecKillResult(user.getId(), goodsId);
         return Result.success(result);
     }
 
-    @RequestMapping(value="/path", method=RequestMethod.GET)
+    @AccessLimit(seconds = 5, maxCount = 5, needLogin = true)
+    @RequestMapping(value = "/path", method = RequestMethod.GET)
     @ResponseBody
     public Result<String> getSecKillPath(User user,
-                                         @RequestParam("goodsId")long goodsId) {
-        if(user == null) {
+                                         @RequestParam("goodsId") long goodsId,
+                                         @RequestParam(value = "verifyCode", defaultValue = "0") int verifyCode
+    ) {
+        if (user == null) {
             return Result.error(CodeMsg.SESSION_ERROR);
         }
-        String path  =secKillService.createSecKillPath(user, goodsId);
+        boolean check = secKillService.checkVerifyCode(user, goodsId, verifyCode);
+        if (!check) {
+            return Result.error(CodeMsg.REQUEST_ILLEGAL);
+        }
+        String path = secKillService.createSecKillPath(user, goodsId);
         return Result.success(path);
     }
+
+
+    @RequestMapping(value = "/verifyCode", method = RequestMethod.GET)
+    @ResponseBody
+    public Result<String> getSecKillVerifyCod(HttpServletResponse response, User user,
+                                              @RequestParam("goodsId") long goodsId) {
+        if (user == null) {
+            return Result.error(CodeMsg.SESSION_ERROR);
+        }
+        try {
+            BufferedImage image = secKillService.createVerifyCode(user, goodsId);
+            OutputStream out = response.getOutputStream();
+            ImageIO.write(image, "JPEG", out);
+            out.flush();
+            out.close();
+            return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error(CodeMsg.SECKILL_FAIL);
+        }
+    }
+
 }

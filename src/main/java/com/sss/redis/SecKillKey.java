@@ -11,5 +11,6 @@ public class SecKillKey extends BasePrefix{
     }
     public static SecKillKey isGoodsOver = new SecKillKey(0,"go");
     public static SecKillKey getSecKillPath = new SecKillKey(60,"skp");
+    public static SecKillKey getSecKillVerifyCode = new SecKillKey(300, "vc");
 
 }
